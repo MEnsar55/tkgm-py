@@ -259,9 +259,7 @@ class TKGMClient:
         return Parcel.from_response(data, neighborhood_id, block, parcel)
 
     def get_parcel_by_coordinate(self, lat: float, lon: float) -> Parcel:
-        """Look up a parcel by GPS coordinates (WGS84).
-
-        Requires authentication (set ``token`` in constructor).
+        """Look up a parcel by GPS coordinates (WGS84). No authentication required.
 
         Args:
             lat: Latitude (e.g. 40.9839 for Ordu).
@@ -269,29 +267,12 @@ class TKGMClient:
 
         Raises:
             TKGMNotFoundError: No parcel at these coordinates.
-            TKGMAuthError:     Authentication token required.
-
-        Note:
-            Authentication is obtained via e-Devlet login at:
-            https://online.tkgm.gov.tr/giris
-            The bearer token can be extracted from the browser's
-            Authorization header after login.
         """
-        # GPS koordinatlarına göre parsel sorgular (WGS84).
-        # Kimlik doğrulama gerektirir (constructor'da token parametresini ayarlayın).
+        # GPS koordinatlarına göre parsel sorgular (WGS84). Kimlik doğrulama gerekmez.
         # lat: Enlem (örn. Ordu için 40.9839).
         # lon: Boylam (örn. Ordu için 37.8764).
         # TKGMNotFoundError: Bu koordinatlarda parsel bulunamadı.
-        # TKGMAuthError:     Kimlik doğrulama token'ı gerekli.
-        # Not: Kimlik doğrulama e-Devlet girişi üzerinden alınır:
-        #      https://online.tkgm.gov.tr/giris
-        #      Bearer token, giriş sonrası tarayıcının Authorization başlığından kopyalanabilir.
-        if not self._token:
-            raise TKGMAuthError(
-                "get_parcel_by_coordinate() requires authentication. "
-                "Pass token=<your_bearer_token> to TKGMClient()."
-            )
-        data = self._get(f"/parsel/cografi/{lat:.6f}/{lon:.6f}")
+        data = self._get(f"/parsel/{lat:.6f}/{lon:.6f}/")
         return Parcel.from_response(data, neighborhood_id=0, block=0, parcel=0)
 
     def close(self) -> None:

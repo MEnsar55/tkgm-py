@@ -161,10 +161,14 @@ async def test_get_parcel_requires_auth() -> None:
             await client.get_parcel(12345, 14, 3)
 
 
-async def test_get_parcel_by_coordinate_requires_auth() -> None:
-    async with AsyncTKGMClient() as client:
-        with pytest.raises(TKGMAuthError):
-            await client.get_parcel_by_coordinate(40.9839, 37.8764)
+@respx.mock
+async def test_get_parcel_by_coordinate_no_auth_needed() -> None:
+    respx.get(f"{BASE}/parsel/40.983900/37.876400/").mock(
+        return_value=httpx.Response(200, json=PARCEL)
+    )
+    async with AsyncTKGMClient() as client:  # no token needed
+        parcel = await client.get_parcel_by_coordinate(40.9839, 37.8764)
+    assert parcel.geometry is not None
 
 
 @respx.mock
@@ -180,7 +184,7 @@ async def test_get_parcel_with_token() -> None:
 
 @respx.mock
 async def test_get_parcel_by_coordinate_with_token() -> None:
-    respx.get(f"{BASE}/parsel/cografi/40.983900/37.876400").mock(
+    respx.get(f"{BASE}/parsel/40.983900/37.876400/").mock(
         return_value=httpx.Response(200, json=PARCEL)
     )
     async with AsyncTKGMClient(token="test-token") as client:

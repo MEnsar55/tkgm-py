@@ -166,11 +166,9 @@ class AsyncTKGMClient:
         return Parcel.from_response(data, neighborhood_id, block, parcel)
 
     async def get_parcel_by_coordinate(self, lat: float, lon: float) -> Parcel:
-        """Look up a parcel by GPS coordinates. Requires auth."""
-        # GPS koordinatlarına göre parsel sorgular. Kimlik doğrulama gerektirir.
-        if not self._token:
-            raise TKGMAuthError("get_parcel_by_coordinate() requires authentication.")
-        data = await self._get(f"/parsel/cografi/{lat:.6f}/{lon:.6f}")
+        """Look up a parcel by GPS coordinates (WGS84). No authentication required."""
+        # GPS koordinatlarına göre parsel sorgular (WGS84). Kimlik doğrulama gerekmez.
+        data = await self._get(f"/parsel/{lat:.6f}/{lon:.6f}/")
         return Parcel.from_response(data, neighborhood_id=0, block=0, parcel=0)
 
     async def close(self) -> None:

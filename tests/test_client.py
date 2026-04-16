@@ -151,10 +151,12 @@ def test_get_parcel_requires_auth() -> None:
             client.get_parcel(12345, 14, 3)
 
 
-def test_get_parcel_by_coordinate_requires_auth() -> None:
-    with TKGMClient() as client:
-        with pytest.raises(TKGMAuthError):
-            client.get_parcel_by_coordinate(40.9839, 37.8764)
+@rsps.activate
+def test_get_parcel_by_coordinate_no_auth_needed() -> None:
+    rsps.add(rsps.GET, f"{BASE}/parsel/40.983900/37.876400/", json=PARCEL)
+    with TKGMClient() as client:  # no token needed
+        parcel = client.get_parcel_by_coordinate(40.9839, 37.8764)
+    assert parcel.geometry is not None
 
 
 @rsps.activate
@@ -170,7 +172,7 @@ def test_get_parcel_with_token() -> None:
 
 @rsps.activate
 def test_get_parcel_by_coordinate_with_token() -> None:
-    rsps.add(rsps.GET, f"{BASE}/parsel/cografi/40.983900/37.876400", json=PARCEL)
+    rsps.add(rsps.GET, f"{BASE}/parsel/40.983900/37.876400/", json=PARCEL)
     with TKGMClient(token="test-token") as client:
         parcel = client.get_parcel_by_coordinate(40.9839, 37.8764)
     assert parcel.geometry is not None

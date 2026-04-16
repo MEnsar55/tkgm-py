@@ -87,9 +87,11 @@ with TKGMClient() as client:
 
 ## Authenticated Endpoints / Kimlik Doğrulama Gerektiren Uç Noktalar
 
-Parcel lookup requires an **e-Devlet bearer token**.
+**Coordinate-based lookup is public** — no token needed.
+Ada/parsel lookup by ID still requires an **e-Devlet bearer token**.
 
-*Parsel sorguları **e-Devlet bearer token** gerektirir.*
+*Koordinata göre parsel sorgusu herkese açıktır — token gerekmez.*
+*Ada/parsel numarasına göre sorgulama hâlâ **e-Devlet bearer token** gerektirir.*
 
 ### How to get a token / Token nasıl alınır
 
@@ -183,7 +185,12 @@ https://cbsapi.tkgm.gov.tr/megsiswebapi.v3.1/api
 | Method | Endpoint | Client method |
 |--------|----------|---------------|
 | `GET` | `/parsel/{mahalle_id}/{ada}/{parsel}` | `get_parcel(neighborhood_id, block, parcel)` |
-| `GET` | `/parsel/cografi/{lat}/{lon}` | `get_parcel_by_coordinate(lat, lon)` |
+
+> **`get_parcel_by_coordinate` does NOT require authentication.**
+> It uses the public `/parsel/{lat}/{lon}/` endpoint discovered via reverse engineering.
+>
+> *`get_parcel_by_coordinate` kimlik doğrulama **gerektirmez**.
+> Tersine mühendislik ile keşfedilen herkese açık `/parsel/{lat}/{lon}/` uç noktasını kullanır.*
 
 ### Convenience Methods / Pratik Arama Yardımcıları
 
