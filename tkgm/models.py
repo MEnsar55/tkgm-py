@@ -17,7 +17,7 @@ class Geometry:
                       # Polygon için: liste içinde liste içinde float listesi
 
     @classmethod
-    def from_dict(cls, d: dict) -> "Geometry":
+    def from_dict(cls, d: dict[str, Any]) -> "Geometry":
         return cls(type=d["type"], coordinates=d["coordinates"])
 
     def centroid(self) -> tuple[float, float]:
@@ -33,11 +33,11 @@ class Geometry:
 class Feature:
     """A GeoJSON Feature with typed properties."""
     # Tiplendirilmiş özelliklerle bir GeoJSON Feature nesnesi.
-    geometry: Geometry
+    geometry: Geometry | None
     properties: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_dict(cls, d: dict) -> "Feature":
+    def from_dict(cls, d: dict[str, Any]) -> "Feature":
         return cls(
             geometry=Geometry.from_dict(d["geometry"]) if d.get("geometry") else None,
             properties=d.get("properties", {}),
@@ -56,7 +56,7 @@ class Province:
     geometry: Geometry | None = None
 
     @classmethod
-    def from_feature(cls, feature: dict) -> "Province":
+    def from_feature(cls, feature: dict[str, Any]) -> "Province":
         props = feature.get("properties", {})
         geo = feature.get("geometry")
         return cls(
@@ -79,7 +79,7 @@ class District:
     geometry: Geometry | None = None
 
     @classmethod
-    def from_feature(cls, feature: dict, province_id: int | None = None) -> "District":
+    def from_feature(cls, feature: dict[str, Any], province_id: int | None = None) -> "District":
         props = feature.get("properties", {})
         geo = feature.get("geometry")
         return cls(
@@ -103,7 +103,7 @@ class Neighborhood:
     geometry: Geometry | None = None
 
     @classmethod
-    def from_feature(cls, feature: dict, district_id: int | None = None) -> "Neighborhood":
+    def from_feature(cls, feature: dict[str, Any], district_id: int | None = None) -> "Neighborhood":
         props = feature.get("properties", {})
         geo = feature.get("geometry")
         return cls(
@@ -133,7 +133,7 @@ class Parcel:
     @classmethod
     def from_response(
         cls,
-        data: dict,
+        data: dict[str, Any],
         neighborhood_id: int,
         block: int,
         parcel: int,
@@ -157,7 +157,7 @@ class Parcel:
             properties=props,
         )
 
-    def to_geojson(self) -> dict:
+    def to_geojson(self) -> dict[str, Any]:
         """Return a GeoJSON Feature dict."""
         # Parseli GeoJSON Feature sözlüğü olarak döndürür.
         return {

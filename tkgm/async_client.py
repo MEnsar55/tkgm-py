@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any, cast
 
 import httpx
 
@@ -27,7 +28,7 @@ _DEFAULT_HEADERS = {
 }
 
 
-def _raise_for(resp: httpx.Response) -> dict:
+def _raise_for(resp: httpx.Response) -> dict[str, Any]:
     if resp.status_code == 401:
         raise TKGMAuthError("Authentication required. Provide a valid bearer token.")
     if resp.status_code == 429:
@@ -46,7 +47,7 @@ def _raise_for(resp: httpx.Response) -> dict:
             raise TKGMNotFoundError(msg)
         raise TKGMError(msg)
 
-    return data
+    return cast(dict[str, Any], data)
 
 
 class AsyncTKGMClient:
@@ -95,7 +96,7 @@ class AsyncTKGMClient:
             transport=transport,
         )
 
-    async def _get(self, path: str) -> dict:
+    async def _get(self, path: str) -> dict[str, Any]:
         async with self._lock:
             now = asyncio.get_event_loop().time()
             elapsed = now - self._last_request_at
@@ -178,5 +179,5 @@ class AsyncTKGMClient:
     async def __aenter__(self) -> "AsyncTKGMClient":
         return self
 
-    async def __aexit__(self, *_) -> None:
+    async def __aexit__(self, *_: object) -> None:
         await self.close()

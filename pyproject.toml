@@ -38,6 +38,7 @@ dev = [
     "responses>=0.24",
     "ruff",
     "mypy",
+    "types-requests",
 ]
 
 [project.urls]

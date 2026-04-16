@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import time
 from functools import lru_cache
+from typing import Any, cast
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -53,7 +54,7 @@ def _build_session(
     return session
 
 
-def _raise_for(resp: requests.Response) -> dict:
+def _raise_for(resp: requests.Response) -> dict[str, Any]:
     """Parse response or raise an appropriate exception."""
     # Yanıtı ayrıştır veya uygun bir hata fırlat.
     if resp.status_code == 401:
@@ -76,7 +77,7 @@ def _raise_for(resp: requests.Response) -> dict:
             raise TKGMNotFoundError(msg)
         raise TKGMError(msg)
 
-    return data
+    return cast(dict[str, Any], data)
 
 
 class TKGMClient:
@@ -139,7 +140,7 @@ class TKGMClient:
         self._last_request_at: float = 0.0
         self._session = _build_session(retries=retries, backoff=backoff, token=token)
 
-    def _get(self, path: str) -> dict:
+    def _get(self, path: str) -> dict[str, Any]:
         """Throttled GET with retry/error handling."""
         # Hız sınırlı GET isteği; otomatik yeniden deneme ve hata yönetimi içerir.
         elapsed = time.monotonic() - self._last_request_at
@@ -301,5 +302,5 @@ class TKGMClient:
     def __enter__(self) -> "TKGMClient":
         return self
 
-    def __exit__(self, *_) -> None:
+    def __exit__(self, *_: object) -> None:
         self.close()
