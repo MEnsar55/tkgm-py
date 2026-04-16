@@ -1,4 +1,5 @@
 """Async TKGM API client (uses httpx)."""
+# Asenkron TKGM API istemcisi (httpx kütüphanesini kullanır).
 
 from __future__ import annotations
 
@@ -67,6 +68,9 @@ class AsyncTKGMClient:
             parcel = await client.get_parcel(55797, 14, 3)
             parcel = await client.get_parcel_by_coordinate(40.9839, 37.8764)
     """
+    # Asenkron TKGM istemcisi — TKGMClient'ın async alternatifi.
+    # Kullanım: async with AsyncTKGMClient() as client: provinces = await client.get_provinces()
+    # Kimlik doğrulamalı: async with AsyncTKGMClient(token="...") as client: parcel = await client.get_parcel(...)
 
     def __init__(
         self,
@@ -104,9 +108,11 @@ class AsyncTKGMClient:
         return _raise_for(resp)
 
     # ── Public endpoints ──────────────────────────────────────────────────────
+    # ── Herkese açık uç noktalar ─────────────────────────────────────────────
 
     async def get_provinces(self) -> list[Province]:
         """Return all provinces. Cached after first call."""
+        # Tüm illeri döndürür. İlk çağrıdan sonra önbelleğe alınır.
         if self._province_cache is None:
             data = await self._get("/idariYapi/ilListe")
             self._province_cache = [Province.from_feature(f) for f in data.get("features", [])]
@@ -121,6 +127,7 @@ class AsyncTKGMClient:
         return [Neighborhood.from_feature(f, district_id=district_id) for f in data.get("features", [])]
 
     # ── Convenience finders ───────────────────────────────────────────────────
+    # ── Pratik arama yardımcıları ─────────────────────────────────────────────
 
     async def find_province(self, name: str) -> Province:
         name_lower = name.lower()
@@ -144,6 +151,7 @@ class AsyncTKGMClient:
         raise TKGMNotFoundError(f"Neighborhood not found: {name!r}")
 
     # ── Authenticated endpoints ───────────────────────────────────────────────
+    # ── Kimlik doğrulama gerektiren uç noktalar ───────────────────────────────
 
     async def get_parcel(
         self,
@@ -152,6 +160,7 @@ class AsyncTKGMClient:
         parcel: int,
     ) -> Parcel:
         """Look up a parcel by administrative address. Requires auth."""
+        # Parseli idari adresine göre sorgular. Kimlik doğrulama gerektirir.
         if not self._token:
             raise TKGMAuthError("get_parcel() requires authentication.")
         data = await self._get(f"/parsel/{neighborhood_id}/{block}/{parcel}")
@@ -159,6 +168,7 @@ class AsyncTKGMClient:
 
     async def get_parcel_by_coordinate(self, lat: float, lon: float) -> Parcel:
         """Look up a parcel by GPS coordinates. Requires auth."""
+        # GPS koordinatlarına göre parsel sorgular. Kimlik doğrulama gerektirir.
         if not self._token:
             raise TKGMAuthError("get_parcel_by_coordinate() requires authentication.")
         data = await self._get(f"/parsel/cografi/{lat:.6f}/{lon:.6f}")

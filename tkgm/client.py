@@ -1,4 +1,5 @@
 """Synchronous TKGM API client (uses requests)."""
+# Senkron TKGM API istemcisi (requests kütüphanesini kullanır).
 
 from __future__ import annotations
 
@@ -21,7 +22,7 @@ from .exceptions import (
 from .models import District, Neighborhood, Parcel, Province
 
 _BASE = "https://cbsapi.tkgm.gov.tr/megsiswebapi.v3.1/api"
-_DEFAULT_TIMEOUT = 20  # seconds
+_DEFAULT_TIMEOUT = 20  # seconds / saniye
 _DEFAULT_HEADERS = {
     "User-Agent": "tkgm-py/1.0 (https://github.com/yourusername/tkgm-py)",
     "Accept": "application/json",
@@ -55,6 +56,7 @@ def _build_session(
 
 def _raise_for(resp: requests.Response) -> dict:
     """Parse response or raise an appropriate exception."""
+    # Yanıtı ayrıştır veya uygun bir hata fırlat.
     if resp.status_code == 401:
         raise TKGMAuthError("Authentication required. Provide a valid bearer token.")
     if resp.status_code == 429:
@@ -68,6 +70,7 @@ def _raise_for(resp: requests.Response) -> dict:
         raise TKGMParseError(f"Cannot parse response: {resp.text[:200]}") from exc
 
     # API returns 200 with a Message field when the resource is not found
+    # API kaynak bulunamadığında 200 döndürür, yanıtta Message alanı bulunur
     if isinstance(data, dict) and "Message" in data:
         msg = data["Message"]
         if "Bulunamadı" in msg or "No HTTP resource" in msg:
@@ -104,6 +107,11 @@ class TKGMClient:
         client = TKGMClient(token="your_bearer_token")
         parcel = client.get_parcel(neighborhood_id=55797, block=14, parcel=3)
     """
+    # TKGM (Tapu ve Kadastro Genel Müdürlüğü) API'si için senkron istemci.
+    # Herkese açık uç noktalar (kimlik doğrulama gerekmez):
+    #   - get_provinces(), get_districts(province_id), get_neighborhoods(district_id)
+    # Kimlik doğrulama gerektiren uç noktalar (e-Devlet / TKGM bearer token gerekli):
+    #   - get_parcel(neighborhood_id, block, parcel), get_parcel_by_coordinate(lat, lon)
 
     def __init__(
         self,
@@ -121,6 +129,11 @@ class TKGMClient:
             backoff:          Backoff factor between retries.
             rate_limit_delay: Minimum seconds between consecutive requests.
         """
+        # token:            e-Devlet / TKGM girişinden alınan Bearer token (herkese açık uç noktalar için opsiyonel).
+        # timeout:          Saniye cinsinden HTTP zaman aşımı.
+        # retries:          Geçici hatalarda otomatik yeniden deneme sayısı.
+        # backoff:          Yeniden denemeler arasındaki bekleme çarpanı.
+        # rate_limit_delay: Ardışık istekler arasındaki minimum bekleme süresi (saniye).
         self._token = token
         self._timeout = timeout
         self._rate_limit_delay = rate_limit_delay
@@ -129,6 +142,7 @@ class TKGMClient:
 
     def _get(self, path: str) -> dict:
         """Throttled GET with retry/error handling."""
+        # Hız sınırlı GET isteği; otomatik yeniden deneme ve hata yönetimi içerir.
         elapsed = time.monotonic() - self._last_request_at
         if elapsed < self._rate_limit_delay:
             time.sleep(self._rate_limit_delay - elapsed)
@@ -139,6 +153,7 @@ class TKGMClient:
         return _raise_for(resp)
 
     # ── Public endpoints ──────────────────────────────────────────────────────
+    # ── Herkese açık uç noktalar ─────────────────────────────────────────────
 
     @lru_cache(maxsize=1)
     def get_provinces(self) -> list[Province]:
@@ -146,6 +161,7 @@ class TKGMClient:
 
         Results are cached for the lifetime of the client instance.
         """
+        # Tüm Türkiye illerini döndürür. Sonuçlar istemci ömrü boyunca önbellekte tutulur.
         data = self._get("/idariYapi/ilListe")
         return [Province.from_feature(f) for f in data.get("features", [])]
 
@@ -155,6 +171,8 @@ class TKGMClient:
         Args:
             province_id: The province ID returned by get_provinces().
         """
+        # Bir ile ait tüm ilçeleri döndürür.
+        # province_id: get_provinces() tarafından döndürülen il ID'si.
         data = self._get(f"/idariYapi/ilceListe/{province_id}")
         return [District.from_feature(f, province_id=province_id) for f in data.get("features", [])]
 
@@ -164,16 +182,21 @@ class TKGMClient:
         Args:
             district_id: The district ID returned by get_districts().
         """
+        # Bir ilçeye ait tüm mahalleleri / köyleri döndürür.
+        # district_id: get_districts() tarafından döndürülen ilçe ID'si.
         data = self._get(f"/idariYapi/mahalleListe/{district_id}")
         return [Neighborhood.from_feature(f, district_id=district_id) for f in data.get("features", [])]
 
     # ── Convenience finders ───────────────────────────────────────────────────
+    # ── Pratik arama yardımcıları ─────────────────────────────────────────────
 
     def find_province(self, name: str) -> Province:
         """Find a province by name (case-insensitive, partial match).
 
         Raises TKGMNotFoundError if not found.
         """
+        # İl adına göre arama yapar (büyük/küçük harf duyarsız, kısmi eşleşme).
+        # Bulunamazsa TKGMNotFoundError fırlatır.
         name_lower = name.lower()
         for p in self.get_provinces():
             if name_lower in p.name.lower():
@@ -182,6 +205,7 @@ class TKGMClient:
 
     def find_district(self, province_id: int, name: str) -> District:
         """Find a district within a province by name (case-insensitive, partial match)."""
+        # İl içinde ilçe adına göre arama yapar (büyük/küçük harf duyarsız, kısmi eşleşme).
         name_lower = name.lower()
         for d in self.get_districts(province_id):
             if name_lower in d.name.lower():
@@ -190,6 +214,7 @@ class TKGMClient:
 
     def find_neighborhood(self, district_id: int, name: str) -> Neighborhood:
         """Find a neighborhood within a district by name (case-insensitive, partial match)."""
+        # İlçe içinde mahalle adına göre arama yapar (büyük/küçük harf duyarsız, kısmi eşleşme).
         name_lower = name.lower()
         for n in self.get_neighborhoods(district_id):
             if name_lower in n.name.lower():
@@ -197,6 +222,7 @@ class TKGMClient:
         raise TKGMNotFoundError(f"Neighborhood not found: {name!r} in district {district_id}")
 
     # ── Authenticated endpoints ───────────────────────────────────────────────
+    # ── Kimlik doğrulama gerektiren uç noktalar ───────────────────────────────
 
     def get_parcel(
         self,
@@ -217,6 +243,13 @@ class TKGMClient:
             TKGMNotFoundError: Parcel does not exist.
             TKGMAuthError:     Authentication token required.
         """
+        # Kadastral parseli idari adresine göre sorgular.
+        # Kimlik doğrulama gerektirir (constructor'da token parametresini ayarlayın).
+        # neighborhood_id: get_neighborhoods() ile alınan mahalle ID'si.
+        # block:           Ada numarası.
+        # parcel:          Parsel numarası.
+        # TKGMNotFoundError: Parsel mevcut değil.
+        # TKGMAuthError:     Kimlik doğrulama token'ı gerekli.
         if not self._token:
             raise TKGMAuthError(
                 "get_parcel() requires authentication. "
@@ -244,6 +277,15 @@ class TKGMClient:
             The bearer token can be extracted from the browser's
             Authorization header after login.
         """
+        # GPS koordinatlarına göre parsel sorgular (WGS84).
+        # Kimlik doğrulama gerektirir (constructor'da token parametresini ayarlayın).
+        # lat: Enlem (örn. Ordu için 40.9839).
+        # lon: Boylam (örn. Ordu için 37.8764).
+        # TKGMNotFoundError: Bu koordinatlarda parsel bulunamadı.
+        # TKGMAuthError:     Kimlik doğrulama token'ı gerekli.
+        # Not: Kimlik doğrulama e-Devlet girişi üzerinden alınır:
+        #      https://online.tkgm.gov.tr/giris
+        #      Bearer token, giriş sonrası tarayıcının Authorization başlığından kopyalanabilir.
         if not self._token:
             raise TKGMAuthError(
                 "get_parcel_by_coordinate() requires authentication. "
@@ -254,6 +296,7 @@ class TKGMClient:
 
     def close(self) -> None:
         """Close the underlying HTTP session."""
+        # Alttaki HTTP oturumunu kapat.
         self._session.close()
 
     def __enter__(self) -> "TKGMClient":

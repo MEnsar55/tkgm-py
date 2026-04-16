@@ -1,4 +1,5 @@
 """Dataclass models for TKGM API responses."""
+# TKGM API yanıtları için veri modelleri (dataclass).
 
 from __future__ import annotations
 
@@ -7,11 +8,13 @@ from typing import Any
 
 
 # ── GeoJSON helpers ──────────────────────────────────────────────────────────
+# ── GeoJSON yardımcı sınıfları ───────────────────────────────────────────────
 
 @dataclass
 class Geometry:
     type: str
     coordinates: Any  # list[list[list[float]]] for Polygon
+                      # Polygon için: liste içinde liste içinde float listesi
 
     @classmethod
     def from_dict(cls, d: dict) -> "Geometry":
@@ -19,6 +22,7 @@ class Geometry:
 
     def centroid(self) -> tuple[float, float]:
         """Return (lon, lat) centroid of the first ring."""
+        # İlk halkadaki koordinatların (lon, lat) ağırlık merkezini döndürür.
         ring = self.coordinates[0] if self.type == "Polygon" else self.coordinates
         lons = [pt[0] for pt in ring]
         lats = [pt[1] for pt in ring]
@@ -28,6 +32,7 @@ class Geometry:
 @dataclass
 class Feature:
     """A GeoJSON Feature with typed properties."""
+    # Tiplendirilmiş özelliklerle bir GeoJSON Feature nesnesi.
     geometry: Geometry
     properties: dict[str, Any] = field(default_factory=dict)
 
@@ -40,10 +45,12 @@ class Feature:
 
 
 # ── Administrative models ─────────────────────────────────────────────────────
+# ── İdari yapı modelleri (il / ilçe / mahalle) ───────────────────────────────
 
 @dataclass
 class Province:
     """Turkish province (il)."""
+    # Türkiye ili.
     id: int
     name: str
     geometry: Geometry | None = None
@@ -65,6 +72,7 @@ class Province:
 @dataclass
 class District:
     """Turkish district (ilçe)."""
+    # Türkiye ilçesi.
     id: int
     name: str
     province_id: int | None = None
@@ -88,6 +96,7 @@ class District:
 @dataclass
 class Neighborhood:
     """Turkish neighborhood / village (mahalle / köy)."""
+    # Türkiye mahallesi veya köyü.
     id: int
     name: str
     district_id: int | None = None
@@ -109,10 +118,12 @@ class Neighborhood:
 
 
 # ── Parcel model ──────────────────────────────────────────────────────────────
+# ── Parsel modeli ─────────────────────────────────────────────────────────────
 
 @dataclass
 class Parcel:
     """A cadastral parcel (tapu parseli)."""
+    # Tapu parseli (kadastro birimi).
     neighborhood_id: int
     block: int           # ada
     parcel: int          # parsel
@@ -128,6 +139,7 @@ class Parcel:
         parcel: int,
     ) -> "Parcel":
         # The API may return a FeatureCollection or a Feature
+        # API yanıtı FeatureCollection veya tek bir Feature olabilir
         if data.get("features"):
             feature = data["features"][0]
         elif data.get("type") == "Feature":
@@ -147,6 +159,7 @@ class Parcel:
 
     def to_geojson(self) -> dict:
         """Return a GeoJSON Feature dict."""
+        # Parseli GeoJSON Feature sözlüğü olarak döndürür.
         return {
             "type": "Feature",
             "geometry": {
