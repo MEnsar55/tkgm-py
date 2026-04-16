@@ -41,8 +41,8 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/tkgm-py"
-Issues   = "https://github.com/yourusername/tkgm-py/issues"
+Homepage = "https://github.com/MEnsar55/tkgm-py"
+Issues   = "https://github.com/MEnsar55/tkgm-py/issues"
 
 [tool.ruff]
 line-length = 100

@@ -22,7 +22,7 @@ from .models import District, Neighborhood, Parcel, Province
 _BASE = "https://cbsapi.tkgm.gov.tr/megsiswebapi.v3.1/api"
 _DEFAULT_TIMEOUT = 20.0
 _DEFAULT_HEADERS = {
-    "User-Agent": "tkgm-py/1.0 (https://github.com/yourusername/tkgm-py)",
+    "User-Agent": "tkgm-py/1.0 (https://github.com/MEnsar55/tkgm-py)",
     "Accept": "application/json",
     "Referer": "https://parselsorgu.tkgm.gov.tr/",
     "Origin": "https://parselsorgu.tkgm.gov.tr",

@@ -1,0 +1,54 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python Version
+      placeholder: "e.g. 3.11.4"
+    validations:
+      required: true
+
+  - type: input
+    id: tkgm-py-version
+    attributes:
+      label: tkgm-py Version
+      placeholder: "e.g. 1.0.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal Reproduction
+      description: Minimal code snippet that reproduces the issue.
+      render: python
+    validations:
+      required: true
+
+  - type: textarea
+    id: traceback
+    attributes:
+      label: Full Traceback
+      render: text
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+    validations:
+      required: true
